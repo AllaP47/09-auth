@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { register } from '../../../lib/api/clientApi';
 import { useAuthStore } from '../../../lib/store/authStore';
 import { User } from '../../../types/user';
-import css from './SignUpPage.module.css';
+import css from './SignUp.module.css';
 
 interface RegisterError {
   response?: {
@@ -18,6 +18,7 @@ interface RegisterError {
 export default function SignUpPage() {
   const router = useRouter();
   
+  // Отримуємо метод setUser із Zustand-стора
   const setUser = useAuthStore((state: { setUser: (user: User) => void }) => state.setUser);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +32,11 @@ export default function SignUpPage() {
 
     try {
       const userData = await register({ email, password });
+      
+      // ЛОГІКА ЗБЕРЕЖЕННЯ: Записуємо дані користувача в Zustand після успішної реєстрації
       setUser(userData);
+      
+      // Автоматичний редірект на сторінку профілю
       router.push('/profile');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {

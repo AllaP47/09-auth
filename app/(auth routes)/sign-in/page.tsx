@@ -18,6 +18,7 @@ interface LoginError {
 export default function SignInPage() {
   const router = useRouter();
   
+  // Отримуємо метод setUser із Zustand-стора
   const setUser = useAuthStore((state: { setUser: (user: User) => void }) => state.setUser);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +32,11 @@ export default function SignInPage() {
 
     try {
       const userData = await login({ email, password });
+      
+      // ЛОГІКА ЗБЕРЕЖЕННЯ: Записуємо дані користувача в Zustand після успішного логіну
       setUser(userData);
+      
+      // Автоматичний редірект на сторінку профілю
       router.push('/profile');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
