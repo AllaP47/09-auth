@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { fetchNoteById } from '../../../../lib/api/notes';
 import { Modal } from '../../../../components/Modal/Modal';
 
-import cssStyles from '../../../@modal/(.)notes/[id]/NotePeview.module.css';
+import cssStyles from '@/app/(private routes)/notes/[id]/details.module.css';
 const css = (cssStyles || {}) as Record<string, string>;
 
 
