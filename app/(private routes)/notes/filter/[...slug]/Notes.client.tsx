@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useDebouncedCallback } from 'use-debounce'; 
 
-import { fetchNotes } from '../../../../lib/api/notes';
-import { NoteList } from '../../../../components/NoteList/NoteList';
-import { SearchBox } from '../../../../components/SearchBox/SearchBox';
-import { Pagination } from '../../../../components/Pagination/Pagination';
-import type { FetchNotesResponse } from '../../../../types/note';
+import { fetchNotes } from '../../../../../lib/api/notes';
+import { NoteList } from '../../../../../components/NoteList/NoteList';
+import { SearchBox } from '../../../../../components/SearchBox/SearchBox';
+import { Pagination } from '../../../../../components/Pagination/Pagination';
+import type { FetchNotesResponse } from '../../../../../types/note';
 
 import cssStyles from '../../notes.module.css';
 const css = (cssStyles || {}) as Record<string, string>;
