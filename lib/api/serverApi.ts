@@ -5,7 +5,6 @@ import { Note } from '../../types/note';
 
 const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + '/api';
 
-// Функція для збору кук на сервері
 const getAuthHeaders = async () => {
   const cookieStore = await cookies();
   return {

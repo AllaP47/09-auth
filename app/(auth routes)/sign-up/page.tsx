@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { register } from '../../../lib/api/clientApi';
 import { useAuthStore } from '../../../lib/store/authStore';
 import { User } from '../../../types/user';
-import css from './SignUp.module.css';
+import css from './SignUpPage.module.css';
 
 interface RegisterError {
   response?: {

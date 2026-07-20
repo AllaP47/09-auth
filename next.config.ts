@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
       static: 180,
     },
   },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ac.goit.global',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
