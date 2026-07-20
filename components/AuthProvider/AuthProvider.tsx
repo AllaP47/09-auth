@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/api/api';
+import { api } from '../../app/api/api';
 import { useAuthStore } from '../../lib/store/authStore';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
