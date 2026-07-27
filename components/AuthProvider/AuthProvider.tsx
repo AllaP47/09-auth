@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { checkSession } from '../../lib/api/clientApi';
+import { checkSession, getMe } from '../../lib/api/clientApi';
 import { useAuthStore } from '../../lib/store/authStore';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -12,15 +12,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-       
-        const userData = await checkSession();
+      
+        const session = await checkSession();
         
-        if (userData && typeof userData === 'object' && userData.email) {
-          setUser(userData); 
+     
+        if (session && typeof session === 'object') {
+       
+          const userData = await getMe();
+          
+        
+          setUser(userData);
         } else {
           clearIsAuthenticated();
         }
       } catch {
+    
         clearIsAuthenticated();
       } finally {
         setIsReady(true);
