@@ -12,7 +12,7 @@ export default async function NoteModalPage({ params }: Props) {
   const queryClient = new QueryClient();
 
   try {
-    // Попередньо завантажуємо дані нотатки на сервері за допомогою prefetchQuery
+
     await queryClient.prefetchQuery({
       queryKey: ['note', id],
       queryFn: () => fetchNoteById(id),
@@ -23,7 +23,7 @@ export default async function NoteModalPage({ params }: Props) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {/* ВИПРАВЛЕНО: Передаємо id як проп, щоб задовольнити NotePreviewClientProps */}
+      
       <NotePreviewClient id={id} />
     </HydrationBoundary>
   );
