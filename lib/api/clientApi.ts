@@ -10,7 +10,6 @@ interface FetchNotesParams {
   tag?: string;
 }
 
-// 1. ВИПРАВЛЕНО: Функція fetchNotes тепер підтримує об'єкт параметрів (пошук, пагінація, теги)
 export const fetchNotes = async (params?: FetchNotesParams): Promise<Note[]> => {
   const { data } = await api.get('/notes', { params });
   return data;
@@ -21,7 +20,6 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
   return data;
 };
 
-// 2. ВИПРАВЛЕНО: Замість Partial<Note> вказано конкретні обов'язкові поля для створення нотатки
 export const createNote = async (noteData: {
   title: string;
   content: string;
@@ -31,13 +29,11 @@ export const createNote = async (noteData: {
   return data;
 };
 
-// 3. ВИПРАВЛЕНО: Функція deleteNote тепер повертає об'єкт видаленої нотатки, а не void
 export const deleteNote = async (id: string): Promise<Note> => {
   const { data } = await api.delete(`/notes/${id}`);
   return data;
 };
 
-// 4. ВИПРАВЛЕНО: Функції register та login приймають тільки email та password замість загального Record
 export const register = async (credentials: { email: string; password: string }): Promise<User> => {
   const { data } = await api.post('/auth/register', credentials);
   return data;
@@ -52,7 +48,6 @@ export const logout = async (): Promise<void> => {
   await api.post('/auth/logout');
 };
 
-// 5. ВИПРАВЛЕНО: Функція checkSession тепер повертає фактичні дані відповіді з бекенду (User або порожню відповідь)
 export const checkSession = async (): Promise<User | null> => {
   const { data } = await api.get('/auth/session');
   return data || null;

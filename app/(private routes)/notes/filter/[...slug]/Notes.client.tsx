@@ -20,7 +20,7 @@ export default function NotesClient({ tag }: NotesClientProps) {
   const [page, setPage] = useState<number>(1);
   const perPage = 12;
 
-  // Завантажуємо дані як чистий масив Note[] без використання placeholderData, що викликав конфлікт
+
   const { data: allNotes = [], isLoading, isError } = useQuery<Note[], Error>({
     queryKey: ['notes', { search, tag }],
     queryFn: () => fetchNotes({ search, tag: tag === 'all' ? undefined : tag }),
@@ -32,11 +32,10 @@ export default function NotesClient({ tag }: NotesClientProps) {
     setPage(1); // Скидаємо на першу сторінку при пошуку
   };
 
-  // Вираховуємо пагінацію на клієнті на основі довжини масиву
   const totalNotes = allNotes.length;
   const totalPages = Math.ceil(totalNotes / perPage) || 1;
 
-  // Зрізаємо масив для поточної сторінки
+
   const startIndex = (page - 1) * perPage;
   const displayedNotes = allNotes.slice(startIndex, startIndex + perPage);
 
