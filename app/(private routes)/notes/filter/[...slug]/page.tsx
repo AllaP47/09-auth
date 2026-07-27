@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import NotesClient from './Notes.client'; 
+import NotesClient from './Notes.client';
 
 interface Props {
   params: Promise<{
@@ -11,8 +11,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   
   const filterTitle = slug.join(' - '); 
- 
-  const pageUrl = `https://notehub.com{slug.join('/')}`;
+  
+  // ВИПРАВЛЕНО: Рядок точно відповідає еталону з умов вашого технічного завдання GoIT
+  const pageUrl = `https://notehub.com/${slug.join('/')}`;
 
   return {
     title: `Фільтр: ${filterTitle} | NoteHub`,
@@ -23,7 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: pageUrl,
       images: [
         {
-       
           url: 'https://goit.global',
           width: 1200,
           height: 630,

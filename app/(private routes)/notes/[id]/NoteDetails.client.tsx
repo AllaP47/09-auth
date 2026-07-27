@@ -3,8 +3,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { fetchNoteById } from '../../../../lib/api/notes';
 
+import { fetchNoteById } from '../../../../lib/api/clientApi'; 
 import cssStyles from './details.module.css';
 
 const css = (cssStyles || {}) as Record<string, string>;
@@ -27,10 +27,7 @@ export default function NoteDetailsClient() {
     return <p style={{ padding: '20px', textAlign: 'center', color: '#dc3545' }}>Something went wrong.</p>;
   }
 
-  // БЕЗПЕЧНО: Обробляємо дату, захищаючи TypeScript від undefined значень
-  const formattedDate = note.createdAt 
-    ? new Date(note.createdAt).toLocaleDateString() 
-    : 'No date available';
+  const formattedDate = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date available';
 
   return (
     <div className={css.container || ''}>

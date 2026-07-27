@@ -1,39 +1,49 @@
 import { cookies } from 'next/headers';
-import axios from 'axios';
+import type { AxiosResponse } from 'axios';
+import { api } from './api';
 import { User } from '../../types/user';
 import { Note } from '../../types/note';
 
-const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + '/api';
-
+// Повертаємо асинхронність та додаємо точні типи для усунення помилки 'any'
 const getAuthHeaders = async () => {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // Використовуємо await, оскільки cookies() повертає Promise
+
+  const cookieString = cookieStore
+    .getAll()
+    .map((cookie: { name: string; value: string }) => `${cookie.name}=${cookie.value}`)
+    .join('; ');
+
   return {
     headers: {
-      Cookie: cookieStore.toString(),
+      Cookie: cookieString,
     },
   };
 };
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
-  const headers = await getAuthHeaders();
-  const { data } = await axios.get(`${baseURL}/notes/${id}`, headers);
+  const config = await getAuthHeaders();
+  const { data } = await api.get(`/notes/${id}`, config);
   return data;
 };
 
-export const fetchNotes = async (): Promise<Note[]> => {
-  const headers = await getAuthHeaders();
-  const { data } = await axios.get(`${baseURL}/notes`, headers);
+export const fetchNotes = async (params?: {
+  search?: string;
+  page?: number;
+  tag?: string;
+}): Promise<Note[]> => {
+  const config = await getAuthHeaders();
+  const { data } = await api.get('/notes', { ...config, params });
   return data;
 };
 
 export const getMe = async (): Promise<User> => {
-  const headers = await getAuthHeaders();
-  const { data } = await axios.get(`${baseURL}/auth/me`, headers);
+  const config = await getAuthHeaders();
+  const { data } = await api.get('/users/me', config);
   return data;
 };
 
-export const checkSession = async (): Promise<{ valid: boolean }> => {
-  const headers = await getAuthHeaders();
-  const { data } = await axios.get(`${baseURL}/auth/session`, headers);
-  return data;
+export const checkSession = async (): Promise<AxiosResponse<User>> => {
+  const config = await getAuthHeaders();
+  const response = await api.get<User>('/auth/session', config);
+  return response;
 };

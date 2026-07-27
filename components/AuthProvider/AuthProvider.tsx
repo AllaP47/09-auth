@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { api } from '../../app/api/api';
+import { checkSession } from '../../lib/api/clientApi';
 import { useAuthStore } from '../../lib/store/authStore';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -12,11 +12,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Робимо прямий запит до сесії, яка повертає користувача або порожній статус 200
-        const { data } = await api.get('/auth/session');
+       
+        const userData = await checkSession();
         
-        if (data && typeof data === 'object' && data.email) {
-          setUser(data); // Тіло не порожнє — користувач успішно авторизований
+        if (userData && typeof userData === 'object' && userData.email) {
+          setUser(userData); 
         } else {
           clearIsAuthenticated();
         }

@@ -1,30 +1,29 @@
 import React from 'react';
-import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-
-import { fetchNoteById } from '../../../../lib/api/notes'; 
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { fetchNoteById } from '@/lib/api/serverApi';
 import NotePreviewClient from './NotePreview.client';
 
-
-interface ParamProps {
-  params: Promise<{
-    id: string;
-  }>;
+interface Props {
+  params: Promise<{ id: string }>;
 }
 
-// ВИПРАВЛЕНО рядок 11: змінено назву функції на NotePreview, щоб не було дублювання з NotePreviewClient
-export default async function NotePreview({ params }: ParamProps) {
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
-
+export default async function NoteModalPage({ params }: Props) {
+  const { id } = await params;
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
-  });
+  try {
+    // Попередньо завантажуємо дані нотатки на сервері за допомогою prefetchQuery
+    await queryClient.prefetchQuery({
+      queryKey: ['note', id],
+      queryFn: () => fetchNoteById(id),
+    });
+  } catch (error) {
+    console.error('Modal SSR Prefetch Error:', error);
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* ВИПРАВЛЕНО: Передаємо id як проп, щоб задовольнити NotePreviewClientProps */}
       <NotePreviewClient id={id} />
     </HydrationBoundary>
   );
