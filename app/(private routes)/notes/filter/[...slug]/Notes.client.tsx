@@ -1,17 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useDebouncedCallback } from 'use-debounce'; 
-
-import { fetchNotes } from '../../../../../lib/api/notes';
+import { fetchNotes } from '../../../../../lib/api/clientApi';
 import { NoteList } from '../../../../../components/NoteList/NoteList';
 import { SearchBox } from '../../../../../components/SearchBox/SearchBox';
 import { Pagination } from '../../../../../components/Pagination/Pagination';
-import type { FetchNotesResponse } from '../../../../../types/note';
-
+import { Note } from '../../../../../types/note';
 import cssStyles from '../../notes.module.css';
+
 const css = (cssStyles || {}) as Record<string, string>;
 
 interface NotesClientProps {
@@ -19,43 +16,63 @@ interface NotesClientProps {
 }
 
 export default function NotesClient({ tag }: NotesClientProps) {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
   const perPage = 12;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['notes', { page, search, tag }],
-    queryFn: () => fetchNotes({ page, perPage, search, tag }),
-    placeholderData: (previousData: FetchNotesResponse | undefined) => previousData,
-    refetchOnMount: false,
+  // Завантажуємо дані як чистий масив Note[] без використання placeholderData, що викликав конфлікт
+  const { data: allNotes = [], isLoading, isError } = useQuery<Note[], Error>({
+    queryKey: ['notes', { search, tag }],
+    queryFn: () => fetchNotes({ search, tag: tag === 'all' ? undefined : tag }),
   });
 
-  const debouncedSearch = useDebouncedCallback((value: string) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setSearch(value);
-    setPage(1); 
-  }, 500);
+    setPage(1); // Скидаємо на першу сторінку при пошуку
+  };
+
+  // Вираховуємо пагінацію на клієнті на основі довжини масиву
+  const totalNotes = allNotes.length;
+  const totalPages = Math.ceil(totalNotes / perPage) || 1;
+
+  // Зрізаємо масив для поточної сторінки
+  const startIndex = (page - 1) * perPage;
+  const displayedNotes = allNotes.slice(startIndex, startIndex + perPage);
+
+  if (isLoading && allNotes.length === 0) {
+    return <p style={{ padding: '20px', textAlign: 'center' }}>Loading notes...</p>;
+  }
+
+  if (isError) {
+    return <p style={{ padding: '20px', textAlign: 'center', color: '#dc3545' }}>Failed to load notes.</p>;
+  }
 
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox onChange={(e) => debouncedSearch(e.target.value)} />
-        {data && data.totalPages > 1 && (
-          <Pagination currentPage={page} totalPages={data.totalPages} onPageChange={setPage} />
-        )}
-        <Link href="/notes/action/create" className={css.button}>
-          Create note +
-        </Link>
-      </header>
+    <div className={css.container || ''}>
+      <div className={css.actionsBar || ''}>
+        <SearchBox onChange={handleSearchChange} />
+      </div>
 
-      <main style={{ minHeight: '300px', position: 'relative' }}>
-        {isLoading && <p style={{ textAlign: 'center' }}>Loading notes...</p>}
-        {!isLoading && data && data.notes.length > 0 && <NoteList notes={data.notes} />}
-        {!isLoading && data && data.notes.length === 0 && (
-          <p style={{ textAlign: 'center', marginTop: '40px', color: '#666' }}>No notes found.</p>
-        )}
-      </main>
+      {displayedNotes.length > 0 ? (
+        <>
+          <NoteList notes={displayedNotes} />
+          {totalPages > 1 && (
+            <Pagination 
+              currentPage={page} 
+              totalPages={totalPages} 
+              onPageChange={(p: number) => setPage(p)} 
+            />
+          )}
+        </>
+      ) : (
+        <p style={{ padding: '40px', textAlign: 'center', color: '#6c757d' }}>
+          No notes found matching your criteria.
+        </p>
+      )}
     </div>
   );
 }
+
 
 

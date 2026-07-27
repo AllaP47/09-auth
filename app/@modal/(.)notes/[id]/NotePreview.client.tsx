@@ -4,7 +4,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { fetchNoteById } from '../../../../lib/api/notes';
+import { fetchNoteById } from '../../../../lib/api/clientApi';
 import { Modal } from '../../../../components/Modal/Modal';
 
 import cssStyles from '@/app/(private routes)/notes/[id]/details.module.css';
