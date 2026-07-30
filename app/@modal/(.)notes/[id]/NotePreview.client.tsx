@@ -2,18 +2,16 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-
-import { fetchNoteById } from '../../../../lib/api/clientApi';
-import { Modal } from '../../../../components/Modal/Modal';
-
+import { useRouter } from 'next/navigation'; // ВИПРАВЛЕНО: Видалено імпорт невикористовуваного useParams для лінтера
+import { fetchNoteById } from '@/lib/api/clientApi';
+import { Modal } from '@/components/Modal/Modal';
 import cssStyles from '@/app/(private routes)/notes/[id]/details.module.css';
-const css = (cssStyles || {}) as Record<string, string>;
 
+const css = (cssStyles || {}) as Record<string, string>;
 
 interface NotePreviewClientProps {
   id: string;
-};
+}
 
 export default function NotePreviewClient({ id }: NotePreviewClientProps) {
   const router = useRouter();
@@ -21,6 +19,7 @@ export default function NotePreviewClient({ id }: NotePreviewClientProps) {
   const { data: note, isLoading, isError } = useQuery({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
+    enabled: !!id,
     refetchOnMount: false,
   });
 
@@ -28,36 +27,63 @@ export default function NotePreviewClient({ id }: NotePreviewClientProps) {
     router.back();
   };
 
+  if (isLoading) {
+    return (
+      /* ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
+      <Modal isOpen={true} onClose={handleClose}>
+        <p style={{ padding: '20px', textAlign: 'center' }}>Loading preview...</p>
+      </Modal>
+    );
+  }
+
+  if (isError || !note) {
+    return (
+      /* ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
+      <Modal isOpen={true} onClose={handleClose}>
+        <p style={{ padding: '20px', textAlign: 'center', color: '#dc3545' }}>Something went wrong.</p>
+      </Modal>
+    );
+  }
+
+  const formattedDate = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date available';
+
   return (
+    /* /ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
     <Modal isOpen={true} onClose={handleClose}>
-      <div className={css.container || ''} style={{ minHeight: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        {isLoading && (
-          <p style={{ textAlign: 'center', color: '#666', fontWeight: '500' }}>
-            Loading note details...
-          </p>
-        )}
+      <div className={css.container || ''} style={{ position: 'relative', padding: '20px' }}>
+        
+        <button 
+          type="button" 
+          onClick={handleClose} 
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            cursor: 'pointer',
+            background: 'none',
+            border: 'none',
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: '#333'
+          }}
+          aria-label="Close modal"
+        >
+          &times;
+        </button>
 
-        {isError && (
-          <p style={{ textAlign: 'center', color: '#dc3545', fontWeight: '500' }}>
-            Failed to load note details. Please try again.
+        <div className={css.item || ''}>
+          <div className={css.header || ''}>
+            <h2>{note.title}</h2>
+          </div>
+          <p className={css.tag || ''}>{note.tag}</p>
+          <p className={css.content || ''}>{note.content}</p>
+          <p className={css.date || ''}>
+            Created date: {formattedDate}
           </p>
-        )}
-
-        {!isLoading && !isError && note && (
-          <>
-            <h2 className={css.title || ''}>{note.title}</h2>
-            <p className={css.content || ''}>{note.content}</p>
-            {note.tag && (
-              <div className={css.tagWrapper || ''} style={{ marginTop: '15px' }}>
-                <span className={css.tag || ''} style={{ background: '#e0e0e0', padding: '4px 10px', borderRadius: '4px', fontSize: '14px' }}>
-                  {note.tag}
-                </span>
-              </div>
-            )}
-          </>
-        )}
+        </div>
       </div>
     </Modal>
   );
 }
+
 
