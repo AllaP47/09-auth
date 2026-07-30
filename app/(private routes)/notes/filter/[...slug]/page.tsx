@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const filterTitle = slug.join(' - '); 
   
-  // ВИПРАВЛЕНО: Рядок точно відповідає еталону з умов вашого технічного завдання GoIT
+
   const pageUrl = `https://notehub.com/${slug.join('/')}`;
 
   return {

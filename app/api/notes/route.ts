@@ -1,67 +1,65 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '../api';
 import { cookies } from 'next/headers';
-import axios from 'axios';
-import { api } from '../../../lib/api/api';
-import { logErrorResponse } from '../../../lib/utils/cookies';
+import { isAxiosError } from 'axios';
+import { logErrorResponse } from '../../../lib/utils/utils';
 
 export async function GET(request: NextRequest) {
-  console.log('API PROXY: Fetching notes list with strict parameters parsing');
-  const { searchParams } = new URL(request.url);
-
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const perPage = parseInt(searchParams.get('perPage') || '12', 10);
-  const search = searchParams.get('search') || '';
-  const rawTag = searchParams.get('tag') || 'all';
-
-  const tag = rawTag === 'all' ? '' : rawTag;
-
   try {
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
+    const search = request.nextUrl.searchParams.get('search') ?? '';
+    const page = Number(request.nextUrl.searchParams.get('page') ?? 1);
+    const rawTag = request.nextUrl.searchParams.get('tag') ?? '';
 
-    const response = await api.get('/notes', {
-      headers: { Cookie: cookieString },
-      params: { page, perPage, search, tag },
+    const tag = rawTag === 'All' ? '' : rawTag;
+
+    const res = await api('/notes', {
+      params: {
+        ...(search !== '' && { search }),
+        page,
+        perPage: 12,
+        ...(tag && { tag }),
+      },
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
     });
 
-    return NextResponse.json(response.data);
-  } catch (error: unknown) {
-    logErrorResponse(error, 'Fetch Notes List GET');
-    if (axios.isAxiosError(error)) {
+    return NextResponse.json(res.data, { status: res.status });
+  } catch (error) {
+    if (isAxiosError(error)) {
+      logErrorResponse(error.response?.data);
       return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 }
+        { error: error.message, response: error.response?.data },
+        { status: error.status }
       );
     }
-    return NextResponse.json({ message: 'Failed to fetch notes' }, { status: 500 });
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
-  console.log('API PROXY: Creating new note with json content-type header');
-
   try {
-    const body = await request.json().catch(() => ({}));
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
-
-    const response = await api.post('/notes', body, {
+    const body = await request.json();
+    const res = await api.post('/notes', body, {
       headers: {
-        Cookie: cookieString,
+        Cookie: cookieStore.toString(),
         'Content-Type': 'application/json',
       },
     });
 
-    return NextResponse.json(response.data);
-  } catch (error: unknown) {
-    logErrorResponse(error, 'Create Note POST');
-    if (axios.isAxiosError(error)) {
+    return NextResponse.json(res.data, { status: res.status });
+  } catch (error) {
+    if (isAxiosError(error)) {
+      logErrorResponse(error.response?.data);
       return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 }
+        { error: error.message, response: error.response?.data },
+        { status: error.status }
       );
     }
-    return NextResponse.json({ message: 'Failed to create note' }, { status: 500 });
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

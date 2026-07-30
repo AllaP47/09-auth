@@ -4,9 +4,8 @@ import { api } from './api';
 import { User } from '../../types/user';
 import { Note } from '../../types/note';
 
-// Повертаємо асинхронність та додаємо точні типи для усунення помилки 'any'
 const getAuthHeaders = async () => {
-  const cookieStore = await cookies(); // Використовуємо await, оскільки cookies() повертає Promise
+  const cookieStore = await cookies();
 
   const cookieString = cookieStore
     .getAll()
@@ -42,8 +41,8 @@ export const getMe = async (): Promise<User> => {
   return data;
 };
 
-export const checkSession = async (): Promise<AxiosResponse<User>> => {
+export const checkSession = async (): Promise<AxiosResponse<{ success: boolean }>> => {
   const config = await getAuthHeaders();
-  const response = await api.get<User>('/auth/session', config);
+  const response = await api.get<{ success: boolean }>('/auth/session', config);
   return response;
 };

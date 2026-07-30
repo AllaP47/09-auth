@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation'; // ВИПРАВЛЕНО: Видалено імпорт невикористовуваного useParams для лінтера
+import { useRouter } from 'next/navigation'; 
 import { fetchNoteById } from '@/lib/api/clientApi';
 import { Modal } from '@/components/Modal/Modal';
 import cssStyles from '@/app/(private routes)/notes/[id]/details.module.css';
@@ -29,7 +29,7 @@ export default function NotePreviewClient({ id }: NotePreviewClientProps) {
 
   if (isLoading) {
     return (
-      /* ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
+  
       <Modal isOpen={true} onClose={handleClose}>
         <p style={{ padding: '20px', textAlign: 'center' }}>Loading preview...</p>
       </Modal>
@@ -38,7 +38,7 @@ export default function NotePreviewClient({ id }: NotePreviewClientProps) {
 
   if (isError || !note) {
     return (
-      /* ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
+    
       <Modal isOpen={true} onClose={handleClose}>
         <p style={{ padding: '20px', textAlign: 'center', color: '#dc3545' }}>Something went wrong.</p>
       </Modal>
@@ -48,7 +48,7 @@ export default function NotePreviewClient({ id }: NotePreviewClientProps) {
   const formattedDate = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date available';
 
   return (
-    /* /ВИПРАВЛЕНО: Додано обов'язковий проп isOpen={true} */
+  
     <Modal isOpen={true} onClose={handleClose}>
       <div className={css.container || ''} style={{ position: 'relative', padding: '20px' }}>
         

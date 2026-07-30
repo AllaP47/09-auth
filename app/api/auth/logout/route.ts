@@ -1,34 +1,34 @@
 import { NextResponse } from 'next/server';
+import { api } from '../../api';
 import { cookies } from 'next/headers';
-import axios from 'axios';
-import { api } from '../../../../lib/api/api';
-import { logErrorResponse } from '../../../../lib/utils/cookies';
+import { isAxiosError } from 'axios';
+import { logErrorResponse } from '../../../../lib/utils/utils';
 
 export async function POST() {
-  console.log('API PROXY: Starting logout request');
-
   try {
     const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
+    const accessToken = cookieStore.get('accessToken')?.value;
+    const refreshToken = cookieStore.get('refreshToken')?.value;
 
-    const response = await api.post(
-      '/auth/logout',
-      {},
-      {
-        headers: { Cookie: cookieString },
-      }
-    );
-    console.log('API PROXY: Backend logout response received status', response.status);
+    await api.post('auth/logout', null, {
+      headers: {
+        Cookie: `accessToken=${accessToken}; refreshToken=${refreshToken}`,
+      },
+    });
 
-    return NextResponse.json(response.data);
-  } catch (error: unknown) {
-    logErrorResponse(error, 'Logout Route Handler');
-    if (axios.isAxiosError(error)) {
+    cookieStore.delete('accessToken');
+    cookieStore.delete('refreshToken');
+
+    return NextResponse.json({ message: 'Logged out successfully' }, { status: 200 });
+  } catch (error) {
+    if (isAxiosError(error)) {
+      logErrorResponse(error.response?.data);
       return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 }
+        { error: error.message, response: error.response?.data },
+        { status: error.status }
       );
     }
-    return NextResponse.json({ message: 'Logout error' }, { status: 500 });
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

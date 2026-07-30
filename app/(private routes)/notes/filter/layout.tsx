@@ -1,4 +1,4 @@
-// app/notes/filter/layout.tsx
+
 import React from 'react';
 import css from './LayoutNotes.module.css'; 
 

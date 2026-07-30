@@ -1,39 +1,45 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import axios from 'axios';
-import { api } from '../../../../lib/api/api';
-import { parseSetCookie, logErrorResponse } from '../../../../lib/utils/cookies';
+import { isAxiosError } from 'axios';
+import { parseSetCookie } from 'cookie';
+import { api } from '../../api';
+import { logErrorResponse } from '../../../../lib/utils/utils';
 
-export async function POST(request: Request) {
-  console.log('API PROXY: Starting login request');
-
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const response = await api.post('/auth/login', body);
+    const body = await req.json();
+    const apiRes = await api.post('auth/login', body);
+    const cookieStore = await cookies();
+    const setCookie = apiRes.headers['set-cookie'];
 
-    const res = NextResponse.json(response.data);
-
-    // ВИПРАВЛЕНО: Обробляємо кілька кук окремо та копіюємо їх оригінальні атрибути
-    const setCookieHeader = response.headers['set-cookie'];
-    if (setCookieHeader) {
-      const cookieStore = await cookies();
-      const cookiesArray = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
-
-      cookiesArray.forEach(cookieStr => {
-        const { name, value, options } = parseSetCookie(cookieStr.toString());
-        cookieStore.set(name, value, options);
-      });
+    if (setCookie) {
+      const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+      for (const cookieStr of cookieArray) {
+        const parsed = parseSetCookie(cookieStr);
+        if (parsed.value) {
+          cookieStore.set(parsed.name, parsed.value, {
+            path: parsed.path || '/',
+            domain: parsed.domain,
+            expires: parsed.expires,
+            maxAge: parsed.maxAge,
+            sameSite: parsed.sameSite as 'strict' | 'lax' | 'none' | undefined,
+            secure: parsed.secure,
+            httpOnly: parsed.httpOnly,
+          });
+        }
+      }
+      return NextResponse.json(apiRes.data, { status: apiRes.status });
     }
-
-    return res;
-  } catch (error: unknown) {
-    logErrorResponse(error, 'Login Route Handler');
-    if (axios.isAxiosError(error)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (error) {
+    if (isAxiosError(error)) {
+      logErrorResponse(error.response?.data);
       return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
+        { error: error.message, response: error.response?.data },
         { status: error.response?.status || 500 }
       );
     }
-    return NextResponse.json({ message: 'Login error' }, { status: 500 });
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -11,12 +11,12 @@ export default function EditProfilePage() {
   const router = useRouter();
   const { user, setUser } = useAuthStore();
   
-  // ВИПРАВЛЕНО: Встановлюємо початкове значення імені прямо в useState без useEffect
+
   const [username, setUsername] = useState<string>(user?.username || '');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   if (!user) {
-    return null; // Чекаємо на ініціалізацію користувача в AuthProvider
+    return null; 
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -27,8 +27,8 @@ export default function EditProfilePage() {
 
     try {
       const updatedUser = await updateMe({ username });
-      setUser(updatedUser); // Оновлюємо глобальний Zustand-стор
-      router.push('/profile'); // Повертаємося в кабінет
+      setUser(updatedUser); 
+      router.push('/profile');
     } catch (error) {
       console.error('Failed to update username:', error);
     } finally {

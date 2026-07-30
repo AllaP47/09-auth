@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Створення нотатки | NoteHub',
   description: 'Створюйте нові нотатки у своєму профілі.',
   openGraph: {
-    // ВИПРАВЛЕНО: Для цієї сторінки вказуємо її точний канонічний URL
+   
     url: 'https://notehub.com/notes/action/create', 
     type: 'website',
     title: 'Створення нотатки | NoteHub',
