@@ -2,7 +2,6 @@ import { api } from './api';
 import { Note } from '../../types/note';
 import { User } from '../../types/user';
 
-// ТЗ вимагає: Типи та інтерфейси для запитів описуються у файлах, де вони використовуються
 interface FetchNotesParams {
   search?: string;
   page?: number;

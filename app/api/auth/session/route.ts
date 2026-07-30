@@ -1,33 +1,33 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import axios from 'axios';
+import { cookies } from 'next/headers';
+import { api } from '../../../../lib/api/api';
+import { parseSetCookie } from '../../../../lib/utils/cookies';
 
-const BACKEND_URL = 'https://goit.global';
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log('API PROXY: Starting check session request');
-  const cookie = request.headers.get('cookie') || '';
-
   try {
-    const response = await axios.get(`${BACKEND_URL}/auth/session`, {
-      headers: { Cookie: cookie },
-    });
-    console.log('API PROXY: Backend session response received status', response.status);
-    return NextResponse.json(response.data);
-  } catch (error: unknown) {
-    console.error('API PROXY ERROR: Session check failed');
+    const cookieStore = await cookies();
+    const cookieString = cookieStore.toString();
+    const response = await api.get('/auth/session', { headers: { Cookie: cookieString } });
+    const res = NextResponse.json(response.data);
 
-    const axiosError = error as {
+    const setCookieHeader = response.headers['set-cookie'];
+    if (setCookieHeader) {
+      const cookieData = parseSetCookie(setCookieHeader.toString());
+      cookieStore.set(cookieData.name, cookieData.value, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/',
+      });
+    }
+    return res;
+  } catch (error: unknown) {
+    const err = error as {
       response?: { data?: { message?: string }; status?: number };
       message?: string;
     };
-
-    const errorMessage =
-      axiosError.response?.data?.message || axiosError.message || 'Session error';
-    const errorStatus = axiosError.response?.status || 500;
-
-    console.error(`API PROXY ERROR: Status ${errorStatus}, Message: ${errorMessage}`);
-
-    return NextResponse.json({ message: errorMessage }, { status: errorStatus });
+    const errorMessage = err.response?.data?.message || err.message || 'Session error';
+    return NextResponse.json({ message: errorMessage }, { status: err.response?.status || 500 });
   }
 }

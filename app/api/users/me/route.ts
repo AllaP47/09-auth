@@ -1,64 +1,44 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import axios from 'axios';
+import { cookies } from 'next/headers';
+import { api } from '../../../../lib/api/api';
+import { logErrorResponse } from '../../../../lib/utils/cookies';
 
-const BACKEND_URL = 'https://goit.global';
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log('API PROXY: Starting fetch profile request');
-  const cookie = request.headers.get('cookie') || '';
-
   try {
-    const response = await axios.get(`${BACKEND_URL}/users/me`, {
-      headers: { Cookie: cookie },
-    });
-    console.log('API PROXY: Backend fetch profile response received status', response.status);
+    const cookieStore = await cookies();
+    const cookieString = cookieStore.toString();
+    const response = await api.get('/users/me', { headers: { Cookie: cookieString } });
     return NextResponse.json(response.data);
   } catch (error: unknown) {
-    console.error('API PROXY ERROR: Fetching profile failed');
-
-    const axiosError = error as {
+    logErrorResponse(error, 'Get Profile');
+    const err = error as {
       response?: { data?: { message?: string }; status?: number };
       message?: string;
     };
-
-    const errorMessage =
-      axiosError.response?.data?.message || axiosError.message || 'Failed to fetch user';
-    const errorStatus = axiosError.response?.status || 500;
-
-    console.error(`API PROXY ERROR: Status ${errorStatus}, Message: ${errorMessage}`);
-
-    return NextResponse.json({ message: errorMessage }, { status: errorStatus });
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch user';
+    return NextResponse.json({ message: errorMessage }, { status: err.response?.status || 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   console.log('API PROXY: Starting update profile request');
-  const cookie = request.headers.get('cookie') || '';
-
   try {
     const body = await request.json().catch(() => ({}));
-    console.log('API PROXY: Update request body parsed successfully');
-
-    const response = await axios.patch(`${BACKEND_URL}/users/me`, body, {
-      headers: { Cookie: cookie },
-    });
-    console.log('API PROXY: Backend update profile response received status', response.status);
+    const cookieStore = await cookies();
+    const cookieString = cookieStore.toString();
+    const response = await api.patch('/users/me', body, { headers: { Cookie: cookieString } });
     return NextResponse.json(response.data);
   } catch (error: unknown) {
-    console.error('API PROXY ERROR: Updating profile failed');
-
-    const axiosError = error as {
+    logErrorResponse(error, 'Update Profile');
+    const err = error as {
       response?: { data?: { message?: string }; status?: number };
       message?: string;
     };
-
-    const errorMessage =
-      axiosError.response?.data?.message || axiosError.message || 'Failed to update user';
-    const errorStatus = axiosError.response?.status || 500;
-
-    console.error(`API PROXY ERROR: Status ${errorStatus}, Message: ${errorMessage}`);
-
-    return NextResponse.json({ message: errorMessage }, { status: errorStatus });
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to update user';
+    return NextResponse.json({ message: errorMessage }, { status: err.response?.status || 500 });
   }
 }

@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useDebouncedCallback } from 'use-debounce';
 import { fetchNotes } from '../../../../../lib/api/clientApi';
 import { NoteList } from '../../../../../components/NoteList/NoteList';
 import { SearchBox } from '../../../../../components/SearchBox/SearchBox';
 import { Pagination } from '../../../../../components/Pagination/Pagination';
-import { Note } from '../../../../../types/note';
+import type { Note } from '../../../../../types/note';
+
 import cssStyles from '../../notes.module.css';
 
 const css = (cssStyles || {}) as Record<string, string>;
@@ -15,31 +18,35 @@ interface NotesClientProps {
   tag?: string;
 }
 
-export default function NotesClient({ tag }: NotesClientProps) {
+export default function NotesClient({ tag = 'all' }: NotesClientProps) {
   const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const perPage = 12;
 
-
-  const { data: allNotes = [], isLoading, isError } = useQuery<Note[], Error>({
-    queryKey: ['notes', { search, tag }],
-    queryFn: () => fetchNotes({ search, tag: tag === 'all' ? undefined : tag }),
-  });
+  
+  const debouncedSearch = useDebouncedCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, 500);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-    setPage(1); // Скидаємо на першу сторінку при пошуку
+    debouncedSearch(e.target.value);
   };
 
-  const totalNotes = allNotes.length;
-  const totalPages = Math.ceil(totalNotes / perPage) || 1;
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['notes', { page, search, tag }],
+    queryFn: () => fetchNotes({ page, perPage, search, tag }),
+    placeholderData: keepPreviousData,
+  });
 
 
-  const startIndex = (page - 1) * perPage;
-  const displayedNotes = allNotes.slice(startIndex, startIndex + perPage);
+const responseData = data as unknown as { notes: Note[]; totalPages: number } | undefined;
 
-  if (isLoading && allNotes.length === 0) {
+  const notesList = responseData?.notes || [];
+  const totalPages = responseData?.totalPages || 1;
+
+  if (isLoading && notesList.length === 0) {
     return <p style={{ padding: '20px', textAlign: 'center' }}>Loading notes...</p>;
   }
 
@@ -51,11 +58,16 @@ export default function NotesClient({ tag }: NotesClientProps) {
     <div className={css.container || ''}>
       <div className={css.actionsBar || ''}>
         <SearchBox onChange={handleSearchChange} />
+        
+     
+        <Link href="/notes/action/create" className={css.createLink || ''}>
+          Create Note
+        </Link>
       </div>
 
-      {displayedNotes.length > 0 ? (
+      {notesList.length > 0 ? (
         <>
-          <NoteList notes={displayedNotes} />
+          <NoteList notes={notesList} />
           {totalPages > 1 && (
             <Pagination 
               currentPage={page} 
