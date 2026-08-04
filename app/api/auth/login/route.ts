@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { isAxiosError } from 'axios';
-import { parseSetCookie } from 'cookie';
 import { api } from '../../api';
-import { logErrorResponse } from '../../../../lib/utils/utils';
+import { cookies } from 'next/headers';
+import { parseSetCookie } from 'cookie';
+import { isAxiosError } from 'axios';
+import { logErrorResponse } from '../../_utils/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,15 +17,8 @@ export async function POST(req: NextRequest) {
       for (const cookieStr of cookieArray) {
         const parsed = parseSetCookie(cookieStr);
         if (parsed.value) {
-          cookieStore.set(parsed.name, parsed.value, {
-            path: parsed.path || '/',
-            domain: parsed.domain,
-            expires: parsed.expires,
-            maxAge: parsed.maxAge,
-            sameSite: parsed.sameSite as 'strict' | 'lax' | 'none' | undefined,
-            secure: parsed.secure,
-            httpOnly: parsed.httpOnly,
-          });
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          cookieStore.set(parsed.name, parsed.value, parsed as any);
         }
       }
       return NextResponse.json(apiRes.data, { status: apiRes.status });
@@ -36,7 +29,7 @@ export async function POST(req: NextRequest) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.response?.status || 500 }
+        { status: error.status }
       );
     }
     logErrorResponse({ message: (error as Error).message });

@@ -3,7 +3,7 @@ export type NoteTagType = 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping' 
 export interface Note {
   id: string;
   title: string;
-  content: string; // або body, залежно від вашого API
+  content: string;
   tag: NoteTagType;
   createdAt?: string;
 }

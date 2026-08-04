@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { api } from '../api';
 import { cookies } from 'next/headers';
 import { isAxiosError } from 'axios';
-import { logErrorResponse } from '../../../lib/utils/utils';
+import { logErrorResponse } from '../_utils/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     const search = request.nextUrl.searchParams.get('search') ?? '';
     const page = Number(request.nextUrl.searchParams.get('page') ?? 1);
     const rawTag = request.nextUrl.searchParams.get('tag') ?? '';
-
     const tag = rawTag === 'All' ? '' : rawTag;
 
     const res = await api('/notes', {

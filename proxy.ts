@@ -51,7 +51,6 @@ export async function proxy(request: NextRequest) {
               response.cookies.set(parsed.name, parsed.value || '', {
                 path: parsed.path || '/',
                 domain: parsed.domain || undefined,
-
                 expires: parsed.expires ? new Date(parsed.expires) : undefined,
                 maxAge: parsed.maxAge,
                 sameSite: parsed.sameSite as 'strict' | 'lax' | 'none' | undefined,
@@ -69,7 +68,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (isPublicRoute && (accessToken || refreshToken)) {
+  if (isPublicRoute && accessToken) {
+    console.log('PROXY: Authenticated user detected on public route, redirecting to home');
     return NextResponse.redirect(new URL('/', request.url));
   }
 
