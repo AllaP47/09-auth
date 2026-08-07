@@ -28,8 +28,7 @@ export async function GET() {
         for (const cookieStr of cookieArray) {
           const parsed = parseSetCookie(cookieStr);
           if (parsed.value) {
-            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-            cookieStore.set(parsed.name, parsed.value, parsed as any);
+            cookieStore.set(parsed.name, parsed.value, parsed);
           }
         }
         return NextResponse.json({ success: true }, { status: 200 });

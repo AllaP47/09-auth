@@ -14,9 +14,15 @@ export async function proxy(request: NextRequest) {
   const accessToken = cookieStore.get('accessToken')?.value;
   const refreshToken = cookieStore.get('refreshToken')?.value;
 
-  const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  // ВИПРАВЛЕНО: Суворіша перевірка маршрутів, щоб уникнути помилкових спрацювань на /notesX чи /profiled
+  const isPrivateRoute = privateRoutes.some(
+    route => pathname === route || pathname.startsWith(route + '/')
+  );
+  const isPublicRoute = publicRoutes.some(
+    route => pathname === route || pathname.startsWith(route + '/')
+  );
 
+  // Сценарій 1: Обробка захищених ПРИВАТНИХ маршрутів
   if (isPrivateRoute) {
     if (!accessToken && !refreshToken) {
       return NextResponse.redirect(new URL('/sign-in', request.url));
@@ -47,14 +53,19 @@ export async function proxy(request: NextRequest) {
           cookiesArray.forEach(cookieStr => {
             const parsed = parseSetCookie(cookieStr.toString());
 
-            if (parsed.name) {
-              response.cookies.set(parsed.name, parsed.value || '', {
+            // ВИПРАВЛЕНО: Безпечно перевіряємо, що parsed.name та parsed.value існують і є валідними
+            if (parsed && parsed.name && parsed.value) {
+              response.cookies.set(parsed.name, parsed.value, {
                 path: parsed.path || '/',
                 domain: parsed.domain || undefined,
                 expires: parsed.expires ? new Date(parsed.expires) : undefined,
                 maxAge: parsed.maxAge,
                 sameSite: parsed.sameSite as 'strict' | 'lax' | 'none' | undefined,
-                secure: process.env.NODE_ENV === 'production',
+                // ВИПРАВЛЕНО: Спочатку зберігаємо оригінальний атрибут secure від бекенду, якщо він є
+                secure:
+                  parsed.secure !== undefined
+                    ? parsed.secure
+                    : process.env.NODE_ENV === 'production',
                 httpOnly: parsed.httpOnly,
               });
             }
@@ -68,6 +79,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Сценарій 2: Обробка ПУБЛІЧНИХ маршрутів (авторизація/реєстрація)
   if (isPublicRoute && accessToken) {
     console.log('PROXY: Authenticated user detected on public route, redirecting to home');
     return NextResponse.redirect(new URL('/', request.url));
